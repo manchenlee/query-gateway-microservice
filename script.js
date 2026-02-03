@@ -14,19 +14,25 @@ const csvData = new SharedArray('test_data', function () {
 
 export const options = {
     scenarios: {
+        baseline_test: {
+            executor: 'constant-arrival-rate',
+            rate: 200,
+            duration: '3m',
+            preAllocatedVUs: 200,
+        },
         scaling_stress_test: {
             executor: 'ramping-arrival-rate',
-            startRate: 100,      
+            startRate: 100,
+            startTime: '3m',      
             timeUnit: '1s',
             stages: [
                 { target: 100, duration: '1m' },
                 { target: 200, duration: '1m' },
-                { target: 300, duration: '1m' },
                 { target: 400, duration: '1m' },
                 { target: 0, duration: '30s' },
             ],
-            preAllocatedVUs: 500,
-            maxVUs: 2000,
+            preAllocatedVUs: 400,
+            maxVUs: 1000,
         },
     },
     thresholds: {
