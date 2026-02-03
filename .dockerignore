@@ -1,0 +1,38 @@
+# --- Python 相關 ---
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.cache/
+
+# --- 模型與大檔案 ---
+# 如果你已經在 Dockerfile 下載模型，就不要把本地的模型資料夾傳進去
+model_cache/
+*.bin
+*.pth
+*.onnx
+
+# --- Docker & Git ---
+.git/
+.gitignore
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# --- 測試報告與日誌 ---
+report.html
+*.log
+out/
+
+# --- 作業系統與 IDE ---
+.DS_Store
+.vscode/
+.idea/

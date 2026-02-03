@@ -1,0 +1,16 @@
+cachetools==6.2.6
+datasets
+fastapi==0.128.0
+ftfy==6.3.1
+httpx==0.28.1
+joblib==1.3.2
+numpy
+pandas
+pydantic==2.12.5
+pydantic_settings==2.12.0
+python-dotenv==1.2.1
+scikit_learn
+sentence_transformers==5.2.2
+#torch==2.8.0+cu126
+torch
+uvicorn
