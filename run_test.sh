@@ -21,6 +21,6 @@ done
 echo ">>> Starting k6 Stress Test..."
 k6 run --out web-dashboard --summary-trend-stats="avg,min,med,max,p(50),p(95),p(99),p(99.9)" script.js
 
-echo ">>> Test finished! Report generated as report.html"
+echo ">>> Test finished! Report generated as summary_report.html"
 echo ">>> Container is keeping alive for you to view logs or copy report."
 tail -f /dev/null
