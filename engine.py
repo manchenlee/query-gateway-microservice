@@ -23,6 +23,8 @@ class QueryBatchEngine:
         self.overlap = 200
 
     async def classify(self, text: str):
+        if self.queue.qsize() > 200:
+            return {"error": "Server busy", "status": 503}
         text = self.normalize(text)
         if text in self.cache:
             return self.cache[text]
@@ -78,8 +80,9 @@ class QueryBatchEngine:
                 except asyncio.QueueEmpty:
                     await asyncio.sleep(0.001)
             
-            print(f"--- [Batch Inference] handling {len(batch)} chunks ---")
-
+            #print(f"--- [Batch Inference] handling {len(batch)} chunks ---")
+            with open("batch_monitor.log", "a") as f:
+                f.write(f"Time: {time.time()} | BatchSize: {len(batch)} / {settings.MAX_BATCH_SIZE} | QSize: {self.queue.qsize()}\n")
             texts = [b[0] for b in batch]
             embs = self.encoder.encode(texts)
             

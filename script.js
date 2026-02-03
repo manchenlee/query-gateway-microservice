@@ -21,11 +21,12 @@ export const options = {
             stages: [
                 { target: 100, duration: '1m' },
                 { target: 200, duration: '1m' },
+                { target: 300, duration: '1m' },
                 { target: 400, duration: '1m' },
                 { target: 0, duration: '30s' },
             ],
             preAllocatedVUs: 500,
-            maxVUs: 1000,
+            maxVUs: 2000,
         },
     },
     thresholds: {

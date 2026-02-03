@@ -25,6 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt \
     -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+ENV PYTHONUNBUFFERED=1
 ENV HF_ENDPOINT=https://hf-mirror.com
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('${MODEL_NAME}')"
 

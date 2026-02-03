@@ -12,10 +12,10 @@ data/*.csv
 data/*.npy
 
 #model/*.joblib
-
+onnx_export/
 reports/
 *.log
-report.html
+summary_report.html
 server.log
 
 .vscode/
