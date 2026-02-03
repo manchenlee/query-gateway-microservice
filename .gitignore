@@ -6,6 +6,7 @@ venv/
 ENV/
 
 .env
+.pdf
 
 data/*.csv
 data/*.npy
