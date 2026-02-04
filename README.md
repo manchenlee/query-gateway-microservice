@@ -44,7 +44,9 @@ docker cp k6-test:/app/summary_report.html ./reports/k6_test/<output_name>.html
 
 ### Semantic Router
 
-The **Semantic Router** is implemented using an embedding-based classifier pipeline:
+Given that this query gateway must handle high-concurrency demands, an external LLM-based approach is unsuitable due to latency and cost constraints. Conversely, while traditional NLP methods and regular expressions offer high efficiency, they fail to grasp semantic context and synonyms. As a result, we implemented a semantic router using an embedding-based classifier to bridge the gap between performance and linguistic understanding.  
+
+The **Semantic Router** is implemented using the below pipeline:
 
 * **Embedding Model:** `intfloat/e5-small-v2`  
 
