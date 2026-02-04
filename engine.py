@@ -86,7 +86,6 @@ class QueryBatchEngine:
                 except asyncio.QueueEmpty:
                     await asyncio.sleep(0.001)
             
-            #print(f"--- [Batch Inference] handling {len(batch)} chunks ---")
             with open("batch_monitor.log", "a") as f:
                 f.write(f"Time: {time.time()} | BatchSize: {len(batch)} / {settings.MAX_BATCH_SIZE} | QSize: {self.queue.qsize()}\n")
 
