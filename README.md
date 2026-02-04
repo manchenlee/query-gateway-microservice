@@ -2,7 +2,7 @@
 This repository is for the homework "Intelligence Query Gateway Microservices".
 
 
-## Environments
+## Environment
 python 3.11.9
 
 ## Setup
