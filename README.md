@@ -67,7 +67,7 @@ The following table compares different 384-dimensional embedding models (`e5-sma
 | all-MiniLM-L6-v2 | **96.96%** | 76.05% | 89.86% | 80.09% | 0.86 | 0.86 | 0.86 | 0.86 |  
 | bge-small-en-v1.5 | 95.08% | 77.31% | 89.13% | 79.64% | 0.86 | 0.86 | 0.85 | 0.86 |  
   
-As shown in the table above, `e5-small-v2` outperformed the other models, particularly in the General QA and Creative Writing categories. While `all-MiniLM-L6-v2` showed a slight lead in simple classification tasks, `e5-small-v2`'s superior semantic representation leads to a more balanced and higher overall F1 score, making it the most robust choice for a Semantic Router.  
+As shown in the comparison, `e5-small-v2` outperformed the other models, particularly in the General QA and Creative Writing categories. While `all-MiniLM-L6-v2` showed a slight lead in simple classification tasks, `e5-small-v2`'s superior semantic representation leads to a more balanced and higher overall F1 score, making it the most robust choice for a Semantic Router.  
 
 #### 2. Ablation Study - Feature Enginearing   
 
