@@ -188,7 +188,7 @@ The latency metrics below include the end-to-end processing time (Embedding + PC
 
 The stress test confirms that the Router can handle sustained traffic of **~190 RPS** with a **100% success rate**. While the Slow Path and batching contention increase tail latency (P99), the median response time remains under **80ms**, making it highly suitable for real-time semantic routing.
 
-Detailed performance metrics, including comprehensive visualizations, are available in the two HTML reports located at `reports/k6-test/`.  
+Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard) HTML reports.  
 
 ## Conclusion
 
