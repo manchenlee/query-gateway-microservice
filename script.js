@@ -22,7 +22,7 @@ export const options = {
         },
         scaling_stress_test: {
             executor: 'ramping-arrival-rate',
-            startRate: 400,
+            startRate: 100,
             startTime: '3m',      
             timeUnit: '1s',
             stages: [
@@ -32,7 +32,7 @@ export const options = {
                 { target: 0, duration: '30s' },
             ],
             preAllocatedVUs: 300,
-            maxVUs: 500,
+            maxVUs: 1000,
         },
     },
     thresholds: {
