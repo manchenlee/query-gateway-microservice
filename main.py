@@ -10,10 +10,12 @@ engine = QueryBatchEngine(model_path=settings.MODEL_PATH)
 class QueryRequest(BaseModel):
     text: str
 
+# Start batch worker
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(engine.batch_worker())
 
+# classify and slow/fast path simulation
 @app.post("/v1/query-classify")
 async def query_classify(request: QueryRequest, response: Response):
     res = await engine.classify(request.text)

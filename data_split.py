@@ -10,6 +10,8 @@ ds = load_dataset(settings.DATASET_PATH)
 
 df = pd.DataFrame(ds['train'])
 categories = ['classification', 'summarization', 'creative_writing', 'general_qa']
+
+# category -> slow/fast path mapping
 label_map = {
     'classification': 0,
     'summarization': 0,
@@ -22,9 +24,11 @@ data = df_filtered[['instruction', 'label', 'category']]
 print('Len of dataframe: ', len(data))
 print(data['label'].value_counts())
 
+# check the max length of instruction
 max_len = df['instruction'].str.len().max()
 print(f"max length of instruction: {max_len}")
 
+# 80/20 split
 train_df, test_df = train_test_split(
     data, 
     test_size=0.2, 
@@ -32,5 +36,6 @@ train_df, test_df = train_test_split(
     stratify=data['label']
 )
 
+# output .csv files
 train_df.to_csv('data/data_train.csv', index=False)
 test_df.to_csv('data/data_test.csv', index=False)

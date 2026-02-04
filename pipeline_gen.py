@@ -68,6 +68,7 @@ seed_setting = str(settings.SEED)
 
 os.makedirs('reports/router_test', exist_ok=True)
 
+# read training set
 train_df = pd.read_csv('data/data_train.csv')
 train_df = split_text_to_chunks(train_df)
 train_df['instruction'] = train_df['instruction'].apply(normalize_text)
@@ -90,7 +91,7 @@ y_train = train_df['label'].values
 print('X_train.shape: ', X_train.shape)
 original_dim = X_train.shape[1]
 
-
+# two pipelines (use_pca or not)
 if a.use_pca:
     pipe = Pipeline([
         ('scaler', StandardScaler()),
@@ -101,17 +102,17 @@ else:
     pipe = Pipeline([
         ('classifier', LogisticRegression(class_weight='balanced', random_state=settings.SEED))
     ])
-    
+
+# training model ...
 pipe.fit(X_train, y_train)
 
 if a.use_pca:
     explained_var = np.sum(pipe.named_steps['pca'].explained_variance_ratio_)
     print(f"LATENT_DIM = {settings.LATENT_DIM} preserves {explained_var:.2%} of original data.")  
 
+# read testing set
 test_df = pd.read_csv('data/data_test.csv')
-#test_df = split_text_to_chunks(test_df)
 test_df['instruction'] = test_df['instruction'].apply(normalize_text)
-#test_df = test_df[test_df['instruction'].str.strip().astype(bool)]
 
 print('######### Encoding Test Set... #########')
 
@@ -121,6 +122,7 @@ categories_voting = []
 instructions_voting = []
 confidence_voting = []
 
+# evaluating ...
 for _, row in test_df.iterrows():
     raw_text = str(row['instruction'])
     actual_label = row['label']
@@ -142,11 +144,13 @@ results_df = pd.DataFrame({
     'label_predict': y_pred_voting
 })
 
+# Accuracy of each category
 for cat in results_df['category'].unique():
     subset = results_df[results_df['category'] == cat]
     accuracy = (subset['label_true'] == subset['label_predict']).mean()
     print(f"Accuracy of Category [{cat:25}]: {accuracy:.2%}")
 
+# misclassification summarization samples
 summarization_errors = results_df[
     (results_df['category'] == 'summarization') & 
     (results_df['label_true'] != results_df['label_predict'])
@@ -154,6 +158,7 @@ summarization_errors = results_df[
 print("The first 5 misclassify summarization data: ")
 print(test_df.loc[summarization_errors.index, 'instruction'].head(5))
 
+# results
 print("\n######### Evaluation #########")
 print(classification_report(y_test_voting, y_pred_voting))
 
@@ -163,10 +168,9 @@ print(f"\nTest Input: {test_text}")
 print(f"Classification Result: {'Slow Path (1)' if label == 1 else 'Fast Path (0)'}")
 print(f"Confidence: [Label 0: {prob[0]:.4f}, Label 1: {prob[1]:.4f}]")
 
-
-#timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 filename = f"reports/router_test/eval_{model_setting}_pca{pca_setting}_t{t_setting}_sd{seed_setting}.log"
 
+# output evaluation results
 with open(filename, 'w', encoding='utf-8') as f:
     f.write(f"Test Time: {datetime.now()}\n")
     f.write(f"Embedding Model: {settings.ENCODER_NAME}\n")

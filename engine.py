@@ -26,9 +26,12 @@ class QueryBatchEngine:
         if self.queue.qsize() > 200:
             return {"error": "Server busy", "status": 503}
         text = self.normalize(text)
+
+        # cache
         if text in self.cache:
             return self.cache[text]
 
+        # data chunking
         chunks = []
         if len(text) <= self.max_chars:
             chunks = [text]
@@ -42,8 +45,10 @@ class QueryBatchEngine:
         tasks = [self.queue.put((chunk, f)) for chunk, f in zip(chunks, futures)]
         await asyncio.gather(*tasks)
 
+        # get results
         chunk_results = await asyncio.gather(*futures)
 
+        # voting
         all_label_1_probs = [res["probs"][1] for res in chunk_results]
         avg_label_1_prob = np.mean(all_label_1_probs)
         
@@ -69,7 +74,8 @@ class QueryBatchEngine:
             batch = [(text, future)]
             await asyncio.sleep(0)
             start_t = time.perf_counter()
-        
+
+            # wait for the end of batch window time or full of batch 
             while len(batch) < self.batch_size:
                 elapsed = (time.perf_counter() - start_t) * 1000
                 if elapsed >= settings.BATCH_WINDOW_MS:
@@ -83,6 +89,8 @@ class QueryBatchEngine:
             #print(f"--- [Batch Inference] handling {len(batch)} chunks ---")
             with open("batch_monitor.log", "a") as f:
                 f.write(f"Time: {time.time()} | BatchSize: {len(batch)} / {settings.MAX_BATCH_SIZE} | QSize: {self.queue.qsize()}\n")
+
+            # feed the batch of samples into encoder
             texts = [b[0] for b in batch]
             embs = self.encoder.encode(texts)
             
