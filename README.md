@@ -7,10 +7,14 @@ python 3.11.9
 
 ## Setup
 
+```bash
+pip install -r requirements.txt
+```
+
 Configure your environment variables by copying `.env.example` to `.env` and filling in the required settings.
 
 ```bash
-pip install -r requirements.txt
+cp .env.example .env
 ```
 
 ### Dataset
