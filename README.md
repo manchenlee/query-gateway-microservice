@@ -202,7 +202,7 @@ The latency metrics below capture the end-to-end processing performance, includi
 
 The updated stress test confirms that the Router is capable of sustaining a throughput of **~258 RPS** with a **100% success rate**. Despite the increased load to 400 VUs, the system maintains a robust latency, making it a reliable solution for high-demand production environments requiring intelligent semantic routing.
 
-Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_300_400_8_10) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_300_400_8_10) HTML reports.
+Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_300_400_8_10) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard_300_400_8_10) HTML reports.
 
 * batch_size_16 with relaxed scecario: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_16_10)  
 * batch_size_32 with relaxed scecario: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report) / [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard)  
