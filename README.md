@@ -202,7 +202,7 @@ The latency metrics below reflect the system's performance at a peak of **258 Vi
 
 The **Batch Size = 8** configuration proved to be highly effective for stabilizing tail latency (P99), reducing it by nearly **100ms** compared to larger batch settings. While the median response time (P50) saw a minor increase, the overall system reliability remained excellent with a **100.00% success rate** and robust classification accuracy. This setting is recommended for environments prioritizing consistent tail-end performance.
 
-Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_8_10) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard_200_400_8_10) HTML reports.
+Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_8_10) HTML report.
 
 * batch_size_16: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_16_10)  
 * batch_size_32: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report) / [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard)
