@@ -1,4 +1,9 @@
 # Query Gateway Microservice
+This repository is for the homework "Intelligence Query Gateway Microservices".
+
+
+## Environments
+python 3.11.9
 
 ## Setup
 
@@ -41,12 +46,16 @@ docker cp k6-test:/app/summary_report.html ./reports/k6_test/<output_name>.html
 The **Semantic Router** is implemented using an embedding-based classifier pipeline:
 
 * **Embedding Model:** `intfloat/e5-small-v2`  
+
 * **Text Chunking & Normalization:** Since the embedding model has a maximum sequence length of 512 tokens, long inputs are partitioned into segments (chunking) before being processed. The final label is determined via a **voting mechanism** across all chunks. Text normalization is applied as a preprocessing step prior to embedding generation.  
+
 * **Dimensionality Reduction:** To optimize inference efficiency for production environments, **PCA (Principal Component Analysis)** is applied to reduce vector dimensions from 384 down to 256.  
+
 * **Logistic Regression:** Given the binary classification nature of the task and the requirement for high inference throughput, **Logistic Regression** was selected as the core classifier. The model utilizes predicted probabilities as a **confidence score** for decision routing.  
+
 * **Reports:** Evaluation results are stored in `reports/router_test`, and the fully trained model pipeline is exported to the `model` directory for deployment.  
 
-#### Embedding Model Comparison  
+#### 1. Embedding Model Comparison  
 The following table compares different 384-dimensional embedding models (`e5-small-v2`, `all-MiniLM-L6-v2` and `bge-small-en-v1.5`). To ensure a fair comparison, all models were tested using the same **Logistic Regression** classifier, **PCA reduction (256D)**, and a **Confidence Threshold of 0.6**.
 
 | Model | Class. (Acc.) | Summ. (Acc.) | Creat. (Acc.) | Gen. QA (Acc.) | Overall Acc. | Precision | Recall | F1 Score |  
@@ -57,7 +66,7 @@ The following table compares different 384-dimensional embedding models (`e5-sma
   
 As shown in the table above, `e5-small-v2` outperformed the other models, particularly in the General QA and Creative Writing categories. While `all-MiniLM-L6-v2` showed a slight lead in simple classification tasks, `e5-small-v2`'s superior semantic representation leads to a more balanced and higher overall F1 score, making it the most robust choice for a Semantic Router.  
 
-#### Ablation Study - Feature Enginearing   
+#### 2. Ablation Study - Feature Enginearing   
 
 Using `e5-small-v2` as the base model, we conducted an ablation study to justify the use of PCA for dimensionality reduction and the confidence threshold for decision filtering.
 
@@ -84,6 +93,63 @@ With the exception of index 57, these samples are contextually indistinguishable
 
 Balancing per-category precision, overall system stability, and inference efficiency, we have selected the **PCA (256D) + Threshold (0.6)** configuration as the standard for our stress testing and deployment.   
 
+
+### Query Batch Engine
+
+To meet the requirements of high concurrency and low-latency routing, the Gateway implements a custom **Asynchronous Dynamic Batching Engine**. This architecture ensures that the system remains responsive under heavy load while maximizing hardware utilization.
+
+#### 1. High Concurrency & Asynchronous Architecture
+
+The system is built on **FastAPI** and utilizes **Asyncio** to ensure non-blocking I/O operations.
+
+* **Non-blocking Main Thread:** The HTTP server receives requests and immediately hands them off to a background worker, preventing the event loop from being blocked by heavy CPU-bound inference tasks.
+
+* **Asynchronous Task Coordination:** Each request creates an internal `asyncio.Future`. The request waits asynchronously until the worker completes the batch and populates the result.
+
+#### 2. Dynamic Batching Mechanism
+
+Instead of performing inference on every single HTTP request, the system aggregates requests into batches.
+
+| Parameter | Value | Description |
+| --- | --- | --- |
+| **Batch Window** | `10ms` | The maximum time the engine waits to collect requests before triggering inference. |
+| **Max Batch Size** | `32` | The maximum number of query chunks processed in a single model forward pass. |
+
+**How it works:**
+
+1. **Request Aggregation:** Requests are placed into an `asyncio.Queue`.
+
+2. **Adaptive Wait:** The `batch_worker` triggers as soon as the first request arrives. It continues to pull from the queue until either the **Batch Window** expires or the **Max Batch Size** is reached.
+
+3. **Vectorized Inference:** The entire batch is encoded and classified in a single vectorized operation, significantly reducing the overhead compared to sequential processing.
+
+#### 3. Chunking & Voting Strategy
+
+To handle inputs exceeding the embedding model's token limit (512 tokens), the engine employs a sliding window approach:
+
+* **Text Chunking:** Long texts are split into chunks of `1200` characters with a `200` character overlap to preserve local context.  
+
+* **Soft Voting:** The engine first calculates the mean probability for the "Slow Path" (Label 1) across all chunks. The **final confidence** is then derived based on the winning class: if the final decision is Label 1, the confidence is the average label 1 probability $\bar{P}_{\text{label}=1}$; otherwise, it is the complement ($\bar{P}_{\text{label}=0} = 1.0 - \bar{P}_{\text{label}=1}$). This ensures the confidence score always represents the average probability of the selected label.
+
+#### 4. Confidence-aware Routing
+
+The system implements a safety-first routing logic based on the model's output probability (Softmax).
+
+* **Confidence Calculation:** The confidence is defined as the probability of the predicted class. For binary classification, we focus on the probability of the "Slow Path" (Label 1).
+
+* **Threshold Selection:** We set a **threshold = 0.6**.
+    * If `label == 1` and `confidence < threshold`, the query is downgraded to the **Fast Path (0)**, even if the raw prediction was Label 1.
+
+
+* **Rationale:** This threshold acts as a "confidence gate," ensuring that only queries with high semantic certainty trigger the resource-intensive Slow Path.
+
+#### 5. Caching Mechanism
+
+To further reduce latency for redundant queries:
+
+* **TTL Cache:** An in-memory **LRU (Least Recently Used)** cache with a **Time-To-Live (TTL)** of 3600 seconds.
+* **Deduplication:** Repeated queries bypass the Batch Engine entirely, returning results in sub-millisecond time.
+
 ### Stress Test
 
 Performance and stress testing are conducted using **K6**. The testing strategy includes:
@@ -92,4 +158,40 @@ Performance and stress testing are conducted using **K6**. The testing strategy 
 2. **Scaling Stress Test:** A 3-minute ramping test with stages at **100, 200, and 400 RPS**.
 3. **Cooldown:** A 30-second window at 0 RPS to ensure the system successfully processes all remaining requests in the queue.
 
-empty
+#### 1. Global Performance Metrics
+Based on the overall HTTP report, the system maintains high availability and stable throughput even under concurrent stress.
+
+| Metric | Value | Description |
+| :--- | :--- | :--- |
+| **Total Requests** | 73,977 | Total successful HTTP transactions during the test. |
+| **Throughput** | 189.53 req/s | Average requests processed per second. |
+| **Success Rate (HTTP 200)** | 100.00% | Zero failed requests or connection errors detected. |
+| **Classification Accuracy** | 88.03% | Real-time accuracy maintained during the stress test. |
+
+#### 2. Router Latency Analysis (Trends & Times)
+The latency metrics below include the end-to-end processing time (Embedding + PCA + Inference + Routing logic).
+
+| Metric | P50 (Median) | P95 | P99 | P99.9 |
+| :--- | :---: | :---: | :---: | :---: |
+| **http_req_duration** | **76.90 ms** | **1072.09 ms** | **1415.87 ms** | 3118.80 ms |
+| **http_req_waiting** | 76.78 ms | 1071.96 ms | 1415.80 ms | 3118.71 ms |
+
+**Key Observations:**
+* **Median Stability:** The **P50 latency of 76.90 ms** demonstrates that for the majority of requests, the **Query Batch Engine** successfully processes queries within a very responsive timeframe, including the 10ms batching window.
+* **Tail Latency (P95/P99):** The jump to **1072ms (P95)** and **1415ms (P99)** indicates the simulated overhead of the **Slow Path** and potential queue congestion during peak bursts when the `MAX_BATCH_SIZE` is saturated.
+* **Non-Blocking Efficiency:** Despite the tail latencies, the `http_req_connecting` and `http_req_blocked` times remain near **0.01 ms**, proving that our asynchronous `FastAPI` + `asyncio.Queue` architecture effectively prevents thread blocking.
+
+
+#### 3. Batching & Resource Efficiency
+* **Batch Utilization:** During the peak stage (up to 312 Virtual Users), the system maintained a consistent iteration rate of **189.65/s**, closely matching the request rate. This indicates that the batching mechanism successfully consolidated individual requests into optimized matrix operations.
+* **Data Throughput:** The system handled a total of **29.06 MB** of bidirectional data transfer with a steady rate of **0.07 MB/s**, showing low network overhead relative to the complexity of the classification task.
+
+The stress test confirms that the Router can handle sustained traffic of **~190 RPS** with a **100% success rate**. While the Slow Path and batching contention increase tail latency (P99), the median response time remains under **80ms**, making it highly suitable for real-time semantic routing.
+
+Detailed performance metrics, including comprehensive visualizations, are available in the two HTML reports located at `reports/k6-test/`.  
+
+## Conclusion
+
+This study demonstrates the efficacy of a high-performance Semantic Router optimized for real-time query classification and routing. By utilizing the `intfloat/e5-small-v2` embedding model combined with PCA dimensionality reduction and a confidence-aware threshold mechanism, the system achieves a robust overall F1-score of 0.88 while significantly reducing computational overhead.  
+
+The integration of an asynchronous dynamic batching engine proves critical for scalability, enabling the gateway to maintain a 100% success rate under a sustained load of approximately 190 RPS. Although feature overlap between complex categories presents inherent classification challenges, the implemented thresholding strategy effectively mitigates misrouting risks. Stress test results, characterized by a median latency of 76.90 ms, confirm that the proposed architecture successfully balances semantic precision with operational efficiency, providing a reliable foundation for high-concurrency production environments.
