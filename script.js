@@ -16,13 +16,13 @@ export const options = {
     scenarios: {
         baseline_test: {
             executor: 'constant-arrival-rate',
-            rate: 200,
+            rate: 300,
             duration: '3m',
-            preAllocatedVUs: 200,
+            preAllocatedVUs: 300,
         },
         scaling_stress_test: {
             executor: 'ramping-arrival-rate',
-            startRate: 100,
+            startRate: 400,
             startTime: '3m',      
             timeUnit: '1s',
             stages: [
@@ -31,8 +31,8 @@ export const options = {
                 { target: 400, duration: '1m' },
                 { target: 0, duration: '30s' },
             ],
-            preAllocatedVUs: 400,
-            maxVUs: 1000,
+            preAllocatedVUs: 300,
+            maxVUs: 500,
         },
     },
     thresholds: {
