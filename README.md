@@ -171,7 +171,7 @@ Performance and stress testing are conducted using **K6**. The testing strategy 
 
 #### 1. Global Performance Metrics
 
-Based on the latest stress test report with the updated configuration, the system demonstrated exceptional stability and high throughput, successfully handling over 100,000 requests with a peak load of **400 Virtual Users**.
+Based on the latest stress test report with the updated configuration, the system demonstrated exceptional stability and high throughput, successfully handling over 100,000 requests with a peak load of **300 Virtual Users**.
 
 | Metric | Value | Description |
 | --- | --- | --- |
@@ -200,7 +200,7 @@ The latency metrics below capture the end-to-end processing performance, includi
 * **Throughput Alignment:** The system achieved a consistent iteration rate of **258.35/s**, perfectly matching the request rate of **258.16/s**. This synchronization confirms the high efficiency of the dynamic batching engine in consolidating concurrent requests.
 * **Network & Data Handling:** Total data transfer reached **39.76 MB** (Sent: 23.63 MB / Received: 16.13 MB). The stable data rates (0.04 MB/s received, 0.06 MB/s sent) demonstrate low communication overhead relative to the classification workload.
 
-The updated stress test confirms that the Router is capable of sustaining a throughput of **~258 RPS** with a **100% success rate**. Despite the increased load to 400 VUs, the system maintains a robust latency, making it a reliable solution for high-demand production environments requiring intelligent semantic routing.
+The updated stress test confirms that the Router is capable of sustaining a throughput of **~258 RPS** with a **100% success rate**. Despite the increased load to 300 VUs, the system maintains a robust latency, making it a reliable solution for high-demand production environments requiring intelligent semantic routing.
 
 Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_300_400_8_10) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard_300_400_8_10) HTML reports.
 
