@@ -4,7 +4,6 @@ class Settings(BaseSettings):
     DATASET_PATH: str
     MODEL_PATH: str
     ENCODER_NAME: str
-    ONNX_ENCODER_NAME: str
     THRESHOLD: float
     LATENT_DIM: int
     SEED: int
