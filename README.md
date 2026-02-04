@@ -12,27 +12,13 @@ This project utilizes a subset of the **databricks-dolly-15k** dataset, specific
 python data_split.py
 ```
 
-### Model
-The **Semantic Router** is implemented using an embedding-based classifier pipeline:
-
-* **Embedding Model:** `intfloat/e5-small-v2`  
-* **Text Chunking & Normalization:** Since the embedding model has a maximum sequence length of 512 tokens, long inputs are partitioned into segments (chunking) before being processed. The final label is determined via a **voting mechanism** across all chunks. Text normalization is applied as a preprocessing step prior to embedding generation.  
-* **Dimensionality Reduction:** To optimize inference efficiency for production environments, **PCA (Principal Component Analysis)** is applied to reduce vector dimensions from 384 down to 256.  
-* **Logistic Regression:** Given the binary classification nature of the task and the requirement for high inference throughput, **Logistic Regression** was selected as the core classifier. The model utilizes predicted probabilities as a **confidence score** for decision routing.  
-* **Reports:** Evaluation results are stored in `reports/router_test`, and the fully trained model pipeline is exported to the `model` directory for deployment.  
-
-You can run the below command to generate pipeline and the conrresponding report:  
+### Generate Semantic Router
+You can run the below command to generate model pipeline and the conrresponding report:  
 ```bash
 python pipeline_gen.py --use_pca --use_threshold
 ```
 
 ### Docker Build & Run
-
-Performance and stress testing are conducted using **K6**. The testing strategy includes:
-
-1. **Baseline Test:** A 3-minute stability test at a constant rate of **200 RPS**.
-2. **Scaling Stress Test:** A 3-minute ramping test with stages at **100, 200, and 400 RPS**.
-3. **Cooldown:** A 30-second window at 0 RPS to ensure the system successfully processes all remaining requests in the queue.
 
 Run the following commands to build and deploy the container:
 
@@ -48,9 +34,18 @@ After the stress test completes, export the report using:
 docker cp k6-test:/app/summary_report.html ./reports/k6_test/<output_name>.html
 ```
 
-## Results
+## Methodology & Evaluation
 
-### Classification
+### Semantic Router
+
+The **Semantic Router** is implemented using an embedding-based classifier pipeline:
+
+* **Embedding Model:** `intfloat/e5-small-v2`  
+* **Text Chunking & Normalization:** Since the embedding model has a maximum sequence length of 512 tokens, long inputs are partitioned into segments (chunking) before being processed. The final label is determined via a **voting mechanism** across all chunks. Text normalization is applied as a preprocessing step prior to embedding generation.  
+* **Dimensionality Reduction:** To optimize inference efficiency for production environments, **PCA (Principal Component Analysis)** is applied to reduce vector dimensions from 384 down to 256.  
+* **Logistic Regression:** Given the binary classification nature of the task and the requirement for high inference throughput, **Logistic Regression** was selected as the core classifier. The model utilizes predicted probabilities as a **confidence score** for decision routing.  
+* **Reports:** Evaluation results are stored in `reports/router_test`, and the fully trained model pipeline is exported to the `model` directory for deployment.  
+
 #### Embedding Model Comparison  
 The following table compares different 384-dimensional embedding models (`e5-small-v2`, `all-MiniLM-L6-v2` and `bge-small-en-v1.5`). To ensure a fair comparison, all models were tested using the same **Logistic Regression** classifier, **PCA reduction (256D)**, and a **Confidence Threshold of 0.6**.
 
@@ -62,7 +57,7 @@ The following table compares different 384-dimensional embedding models (`e5-sma
   
 As shown in the table above, `e5-small-v2` outperformed the other models, particularly in the General QA and Creative Writing categories. While `all-MiniLM-L6-v2` showed a slight lead in simple classification tasks, `e5-small-v2`'s superior semantic representation leads to a more balanced and higher overall F1 score, making it the most robust choice for a Semantic Router.  
 
-#### Feature Engineering & Optimization Study    
+#### Ablation Study - Feature Enginearing   
 
 Using `e5-small-v2` as the base model, we conducted an ablation study to justify the use of PCA for dimensionality reduction and the confidence threshold for decision filtering.
 
@@ -90,5 +85,11 @@ With the exception of index 57, these samples are contextually indistinguishable
 Balancing per-category precision, overall system stability, and inference efficiency, we have selected the **PCA (256D) + Threshold (0.6)** configuration as the standard for our stress testing and deployment.   
 
 ### Stress Test
+
+Performance and stress testing are conducted using **K6**. The testing strategy includes:
+
+1. **Baseline Test:** A 3-minute stability test at a constant rate of **200 RPS**.
+2. **Scaling Stress Test:** A 3-minute ramping test with stages at **100, 200, and 400 RPS**.
+3. **Cooldown:** A 30-second window at 0 RPS to ensure the system successfully processes all remaining requests in the queue.
 
 empty
