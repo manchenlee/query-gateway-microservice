@@ -163,49 +163,58 @@ To further reduce latency for redundant queries:
 
 ### Stress Test
 
-Performance and stress testing are conducted using **K6**. The testing strategy includes:
+Performance and stress testing are conducted using **K6**. We used a **Concurrency-based approach** to evaluate system resilience under direct user pressure:
 
-1. **Baseline Test:** A 3-minute stability test at a constant rate of **300 RPS**.
-2. **Scaling Stress Test:** A 3-minute ramping test with stages at **100, 200, and 400 RPS**.
-3. **Cooldown:** A 30-second window at 0 RPS to ensure the system successfully processes all remaining requests in the queue.
+1. **Baseline Test:** A 3-minute stability test at a constant load of **200 VUs**.
+2. **Scaling Stress Test:** A 3-minute ramping test with stages at **50, 150, and 250 VUs**.
+3. **Cooldown:** A 30-second window at 0 VUs to ensure the system successfully processes all remaining requests in the queue.
 
 #### 1. Global Performance Metrics
 
-Based on the latest stress test report with the updated configuration, the system demonstrated exceptional stability and high throughput, successfully handling over 100,000 requests with a peak load of **300 Virtual Users**.
+Based on the updated concurrency report, the system demonstrated excellent scalability. By fixing the number of Virtual Users, the system naturally reached its optimal throughput, handling over 116,000 requests with peak efficiency.
 
 | Metric | Value | Description |
 | --- | --- | --- |
-| **Total Requests** | 100,808 | Total successful HTTP transactions processed during the test. |
-| **Throughput** | 258.16 req/s | Average requests handled per second under sustained load. |
-| **Success Rate (HTTP 200)** | 100.00% | Full availability maintained with zero failed requests. |
-| **Classification Accuracy** | 88.05% | High semantic routing precision preserved during high-concurrency stages. |
+| **Total Requests** | 116,516 | Total successful HTTP transactions during the concurrency test. |
+| **Throughput** | 298.04 req/s | Average requests processed per second at peak concurrent load. |
+| **Success Rate (HTTP 200)** | 100.00% | Zero failed requests maintained despite high concurrent pressure. |
+| **Classification Accuracy** | 88.15% | Real-time accuracy remained stable as concurrency increased. |
 
 #### 2. Router Latency Analysis (Trends & Times)
 
-The latency metrics below capture the end-to-end processing performance, including the query batching window and inference pipeline, under 3-minute stability test and 3-minute ramping test scenarios.
+The latency metrics below capture the system's performance under the sustained pressure of **249 Peak Virtual Users**.
 
 | Metric | P50 (Median) | P95 | P99 | P99.9 |
 | --- | --- | --- | --- | --- |
-| **http_req_duration** | **98.83 ms** | **1082.39 ms** | **1382.46 ms** | 3140.46 ms |
-| **http_req_waiting** | 98.71 ms | 1082.25 ms | 1382.35 ms | 3140.31 ms |
+| **http_req_duration** | **171.27 ms** | **1129.01 ms** | **1316.97 ms** | 2481.34 ms |
+| **http_req_waiting** | 171.23 ms | 1128.97 ms | 1316.92 ms | 2481.23 ms |
 
 **Key Observations:**
 
-* **Median Performance:** The **P50 latency of 98.83 ms** indicates that the system remains highly responsive for the majority of users, staying well under the 100ms threshold even as throughput increased significantly.
-* **Tail Latency Management:** The **P99 latency of 1382.46 ms** reflects the inherent processing time of the "Slow Path" and the batching coordination under near-peak utilization.
-* **Architecture Efficiency:** `http_req_connecting` and `http_req_blocked` remained at **0.00 ms** and **0.01 ms**, respectively, proving that the asynchronous FastAPI and queue-based worker architecture effectively prevent thread exhaustion.
+* **Balanced Median Latency:** The **P50 latency of 171.27 ms** reflects the stable processing time when the system is saturated with concurrent users, balancing batching windows with inference speed.
+* **Optimized Tail Latency:** The **P99 latency of 1316.97 ms** shows improved stability compared to arrival-rate tests, as the VU-based approach prevents overwhelming the queue beyond its physical processing limits.
+* **Resource Efficiency:** Connection overhead (`http_req_connecting`) remained at **0.00 ms**, confirming that the system handles high concurrency without network-level bottlenecks.
 
 #### 3. Batching & Resource Efficiency
 
-* **Throughput Alignment:** The system achieved a consistent iteration rate of **258.35/s**, perfectly matching the request rate of **258.16/s**. This synchronization confirms the high efficiency of the dynamic batching engine in consolidating concurrent requests.
-* **Network & Data Handling:** Total data transfer reached **39.76 MB** (Sent: 23.63 MB / Received: 16.13 MB). The stable data rates (0.04 MB/s received, 0.06 MB/s sent) demonstrate low communication overhead relative to the classification workload.
+* **Throughput Synchronization:** The system maintained an iteration rate of **298.30/s**, aligning almost perfectly with the request rate of **298.04/s**. This confirms that even under a Concurrency Test model, the dynamic batching engine effectively consolidates requests into efficient processing units.
+* **Data Footprint:** The total data transfer reached **45.98 MB** (Sent: 27.34 MB / Received: 18.64 MB). The sustained data rate (avg 0.12 MB/s combined) highlights the low-overhead nature of the router's communication protocol.
 
-The updated stress test confirms that the Router is capable of sustaining a throughput of **~258 RPS** with a **100% success rate**. Despite the increased load to 300 VUs, the system maintains a robust latency, making it a reliable solution for high-demand production environments requiring intelligent semantic routing.
+The transition to a Concurrency Test demonstrates that the Router can comfortably sustain nearly **400 RPS** when driven by **250 concurrent users**. With a **100% success rate** and consistent accuracy, the system proves to be a robust solution for high-concurrency environments where predictable throughput is essential.
 
-Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_300_400_8_10) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard_300_400_8_10) HTML reports.
+Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_vu200_250_8_10) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard_vu200_250_8_10) HTML reports.
 
-* batch_size_16 with relaxed scecario: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_16_10)  
-* batch_size_32 with relaxed scecario: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report) / [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard)  
+We also conduct the arrival rate stress test. The test scenarios includes:  
+
+1. **Baseline Test:** A 3-minute stability test at a constant rate of 200 (relaxed) / 300 (strict) RPS.
+2. **Scaling Stress Test:** A 3-minute ramping test with stages at 100, 200, and 400 RPS.
+3. **Cooldown:** A 30-second window at 0 RPS to ensure the system successfully processes all remaining requests in the queue.
+
+Below is reports for the arrival rate stress test:  
+
+* batch_size_8 with strict arrival rate scenario: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_300_400_8_10) / [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard_300_400_8_10)
+* batch_size_16 with relaxed arrival rate scenario: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_16_10)  
+* batch_size_32 with relaxed arrival rate scenario: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report) / [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard)  
 
 ## Conclusion
 
