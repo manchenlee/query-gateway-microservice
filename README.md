@@ -171,6 +171,8 @@ Performance and stress testing are conducted using **K6**. We used a **Concurren
 
 #### 1. Global Performance Metrics
 
+![HTTP Performance Overview](img/plot_overview.png)
+
 Based on the updated concurrency report, the system demonstrated excellent scalability. By fixing the number of Virtual Users, the system naturally reached its optimal throughput, handling over 116,000 requests with peak efficiency.
 
 | Metric | Value | Description |
