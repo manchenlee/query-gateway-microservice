@@ -124,7 +124,7 @@ Instead of performing inference on every single HTTP request, the system aggrega
 | Parameter | Value | Description |
 | --- | --- | --- |
 | **Batch Window** | `10ms` | The maximum time the engine waits to collect requests before triggering inference. |
-| **Max Batch Size** | `32` | The maximum number of query chunks processed in a single model forward pass. |
+| **Max Batch Size** | `8` | The maximum number of query chunks processed in a single model forward pass. |
 
 **How it works:**
 
@@ -170,37 +170,42 @@ Performance and stress testing are conducted using **K6**. The testing strategy 
 3. **Cooldown:** A 30-second window at 0 RPS to ensure the system successfully processes all remaining requests in the queue.
 
 #### 1. Global Performance Metrics
-Based on the overall HTTP report, the system maintains high availability and stable throughput even under concurrent stress.
+
+Based on the updated HTTP report with **Batch Size = 8**, the system maintained high availability and a stable throughput of approximately **191 RPS** throughout the test duration.
 
 | Metric | Value | Description |
-| :--- | :--- | :--- |
-| **Total Requests** | 73,977 | Total successful HTTP transactions during the test. |
-| **Throughput** | 189.53 req/s | Average requests processed per second. |
-| **Success Rate (HTTP 200)** | 100.00% | Zero failed requests or connection errors detected. |
-| **Classification Accuracy** | 88.03% | Real-time accuracy maintained during the stress test. |
+| --- | --- | --- |
+| **Total Requests** | 74,575 | Total successful HTTP transactions processed. |
+| **Throughput** | 190.92 req/s | Average requests handled per second. |
+| **Success Rate (HTTP 200)** | 100.00% | No failed requests or connection errors detected. |
+| **Classification Accuracy** | 88.06% | Real-time accuracy remained consistent with smaller batching. |
 
 #### 2. Router Latency Analysis (Trends & Times)
-The latency metrics below include the end-to-end processing time (Embedding + PCA + Inference + Routing logic).
+
+The latency metrics below reflect the system's performance at a peak of **258 Virtual Users** using the reduced batch size configuration.
 
 | Metric | P50 (Median) | P95 | P99 | P99.9 |
-| :--- | :---: | :---: | :---: | :---: |
-| **http_req_duration** | **76.90 ms** | **1072.09 ms** | **1415.87 ms** | 3118.80 ms |
-| **http_req_waiting** | 76.78 ms | 1071.96 ms | 1415.80 ms | 3118.71 ms |
+| --- | --- | --- | --- | --- |
+| **http_req_duration** | **74.67 ms** | **1061.11 ms** | **1195.01 ms** | 2209.67 ms |
+| **http_req_waiting** | 74.54 ms | 1061.00 ms | 1194.91 ms | 2209.56 ms |
 
 **Key Observations:**
-* **Median Stability:** The **P50 latency of 76.90 ms** demonstrates that for the majority of requests, the **Query Batch Engine** successfully processes queries within a very responsive timeframe, including the 10ms batching window.
-* **Tail Latency (P95/P99):** The jump to **1072ms (P95)** and **1415ms (P99)** indicates the simulated overhead of the **Slow Path** and potential queue congestion during peak bursts when the `MAX_BATCH_SIZE` is saturated.
-* **Non-Blocking Efficiency:** Despite the tail latencies, the `http_req_connecting` and `http_req_blocked` times remain near **0.01 ms**, proving that our asynchronous `FastAPI` + `asyncio.Queue` architecture effectively prevents thread blocking.
 
+* **Latency Trade-off:** With **Batch Size = 8**, the **P50 latency slightly increased to 74.67 ms** compared to the previous run (67.36 ms). This suggests that smaller batches lead to more frequent but smaller inference calls, slightly shifting the median overhead.
+* **Improved Tail Stability:** Interestingly, the **P99 latency decreased significantly to 1195.01 ms** (down from 1291.66 ms). This indicates that reducing the batch size prevented long queue waiting times during peak bursts, providing a more "predictable" tail latency.
+* **Asynchronous Integrity:** `http_req_connecting` and `http_req_blocked` remained at an average of **0.00 ms** and **0.01 ms** respectively, confirming that the smaller batch size did not introduce I/O blocking.
 
 #### 3. Batching & Resource Efficiency
-* **Batch Utilization:** During the peak stage (up to 312 Virtual Users), the system maintained a consistent iteration rate of **189.65/s**, closely matching the request rate. This indicates that the batching mechanism successfully consolidated individual requests into optimized matrix operations.
-* **Data Throughput:** The system handled a total of **29.06 MB** of bidirectional data transfer with a steady rate of **0.07 MB/s**, showing low network overhead relative to the complexity of the classification task.
 
-The stress test confirms that the Router can handle sustained traffic of **~190 RPS** with a **100% success rate**. While the Slow Path and batching contention increase tail latency (P99), the median response time remains under **80ms**, making it highly suitable for real-time semantic routing.
+* **Throughput Consistency:** The system maintained an iteration rate of **191.07/s**, successfully keeping pace with the incoming request rate of **190.92/s**.
+* **Resource Footprint:** Total data transfer reached **29.43 MB** (Sent: 17.50 MB / Received: 11.93 MB), showing that the change in batch size had a negligible impact on bandwidth consumption.
 
-Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard) HTML reports.  
+The **Batch Size = 8** configuration proved to be highly effective for stabilizing tail latency (P99), reducing it by nearly **100ms** compared to larger batch settings. While the median response time (P50) saw a minor increase, the overall system reliability remained excellent with a **100.00% success rate** and robust classification accuracy. This setting is recommended for environments prioritizing consistent tail-end performance.
 
+Detailed performance metrics, including comprehensive visualizations, are available in the [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_8_10) and [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard_200_400_8_10) HTML reports.
+
+* batch_size_16: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report_200_400_16_10)  
+* batch_size_32: [summary](https://manchenlee.github.io/query_gateway_microservice/reports/summary_report) / [dashboard](https://manchenlee.github.io/query_gateway_microservice/reports/dashboard)
 ## Conclusion
 
 This study demonstrates the efficacy of a high-performance Semantic Router optimized for real-time query classification and routing. By utilizing the `intfloat/e5-small-v2` embedding model combined with PCA dimensionality reduction and a confidence-aware threshold mechanism, the system achieves a robust overall F1-score of 0.88 while significantly reducing computational overhead.  
