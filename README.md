@@ -36,6 +36,7 @@ docker logs -f k6-test
 After the stress test completes, export the report using:
 
 ```bash
+mkdir -p ./reports/k6_test/
 docker cp k6-test:/app/summary_report.html ./reports/k6_test/<output_name>.html
 ```
 

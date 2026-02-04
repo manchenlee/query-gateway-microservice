@@ -1,6 +1,5 @@
 import pandas as pd
 import re
-import unicodedata
 from ftfy import fix_text
 
 def normalize_text(text: str) -> str:
