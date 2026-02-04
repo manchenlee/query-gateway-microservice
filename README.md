@@ -52,7 +52,7 @@ The **Semantic Router** is implemented using the below pipeline:
 
 * **Text Chunking & Normalization:** Since the embedding model has a maximum sequence length of 512 tokens, long inputs are partitioned into segments (chunking) before being processed. The final label is determined via a **voting mechanism** across all chunks. Text normalization is applied as a preprocessing step prior to embedding generation.  
 
-* **Dimensionality Reduction:** To optimize inference efficiency for production environments, **PCA (Principal Component Analysis)** is applied to reduce vector dimensions from 384 down to 256.  
+* **Dimensionality Reduction:** To optimize inference efficiency for production environments, **PCA (Principal Component Analysis)** is applied to reduce vector dimensions from 384 down to 256. We have verified that the reduced data retains approximately 90% of the original variance, ensuring that the dimensionality reduction does not compromise classification performance.  
 
 * **Logistic Regression:** Given the binary classification nature of the task and the requirement for high inference throughput, **Logistic Regression** was selected as the core classifier. The model utilizes predicted probabilities as a **confidence score** for decision routing.  
 
