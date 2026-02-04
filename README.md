@@ -9,6 +9,10 @@ python 3.11.9
 
 Configure your environment variables by copying `.env.example` to `.env` and filling in the required settings.
 
+```bash
+pip install -r requirements.txt
+```
+
 ### Dataset
 
 This project utilizes a subset of the **databricks-dolly-15k** dataset, specifically extracting four categories: `classification`, `summarization`, `creative_writing`, and `general_qa`. The data is split into an 80/20 ratio and saved as `data_train.csv` and `data_test.csv`.
