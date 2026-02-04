@@ -31,4 +31,4 @@ async def query_classify(request: QueryRequest, response: Response):
     
     response.headers["x-router-latency"] = "10"
     
-    return {"label": label}
+    return {"label": str(label)}
