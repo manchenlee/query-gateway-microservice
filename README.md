@@ -140,7 +140,7 @@ To handle inputs exceeding the embedding model's token limit (512 tokens), the e
 
 * **Text Chunking:** Long texts are split into chunks of `1200` characters with a `200` character overlap to preserve local context.  
 
-* **Soft Voting:** The engine first calculates the mean probability for the "Slow Path" (Label 1) across all chunks. The **final confidence** is then derived based on the winning class: if the final decision is Label 1, the confidence is the average label 1 probability $\bar{P}_{\text{label}=1}$ ; otherwise, it is the complement ( $\bar{P}_{\text{label}=0} = 1.0 - \bar{P}_{\text{label}=1}$ ). This ensures the confidence score always represents the average probability of the selected label.
+* **Soft Voting:** The engine first calculates the mean probability for the "Slow Path" (Label 1) across all chunks. The **final confidence** is then derived based on the winning class: if the final decision is Label 1, the confidence is the average label 1 probability; otherwise, it is the complement ( 1.0 - average_label_1_probability ). This ensures the confidence score always represents the average probability of the selected label.
 
 #### 4. Confidence-aware Routing
 
